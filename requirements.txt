@@ -1,9 +1,5 @@
 streamlit
-scikit-learn
-pandas
 numpy
-matplotlib
-praat-parselmouth
-streamlit-option-menu
+scikit-learn
 cohere
-streamlit-webrtc
+streamlit_option_menu

@@ -8,14 +8,8 @@ Guide: K Sharath
 import pickle
 import streamlit as st
 from streamlit_option_menu import option_menu
-import cohere
-import parselmouth
-import tempfile
-import os
 import numpy as np
-import av
-
-from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, ClientSettings
+import cohere
 
 
 try:
@@ -36,7 +30,6 @@ except:
 with st.sidebar:
     selected = option_menu('PARKINSON DISEASE PREDICTION',
                            ['Voice Clinical Data Test',
-                            'Photonation Test'
                             'Self Assessment',
                             'Chat Helper'],  # NEW OPTION
                            default_index=0)
@@ -90,103 +83,6 @@ if selected == 'Voice Data Test':
                 st.error("❌ Please enter valid numbers only")
         else:
             st.error("❌ Model not loaded properly")
-
-# --------------------- Phonation Test ---------------------
-# --------------------- Phonation Test ---------------------
-elif selected == "Phonation Test":
-    import av
-    import tempfile
-    import wave
-    import streamlit as st
-    from streamlit_webrtc import webrtc_streamer, WebRtcMode, ClientSettings
-
-    st.title("🎙️ Phonation Test for Parkinson's Detection")
-    st.write("Record your voice saying **'ahhh' for 5 seconds**.")
-
-    # WebRTC config
-    WEBRTC_CLIENT_SETTINGS = ClientSettings(
-        media_stream_constraints={"audio": True, "video": False},
-        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-    )
-
-    audio_buffer = []
-
-    # Audio processor
-    class AudioProcessor:
-        def recv(self, frame: av.AudioFrame) -> av.AudioFrame:
-            audio_buffer.append(frame.to_ndarray().flatten())
-            return frame
-
-    ctx = webrtc_streamer(
-        key="audio-only",
-        mode=WebRtcMode.SENDRECV,
-        in_audio=True,
-        out_audio=False,
-        client_settings=WEBRTC_CLIENT_SETTINGS,
-        audio_processor_factory=AudioProcessor,
-    )
-
-    if ctx.state.playing:
-        st.info("Recording... Speak now!")
-    else:
-        if audio_buffer:
-            st.success("✅ Audio recording captured.")
-            import numpy as np
-            import parselmouth
-            import os
-
-            # Save to temporary WAV
-            audio_data = np.concatenate(audio_buffer).astype(np.int16)
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_wav:
-                with wave.open(tmp_wav, 'wb') as wf:
-                    wf.setnchannels(1)
-                    wf.setsampwidth(2)
-                    wf.setframerate(48000)
-                    wf.writeframes(audio_data.tobytes())
-                wav_path = tmp_wav.name
-
-            st.audio(wav_path)
-
-            # --- Extract features ---
-            def extract_features_from_audio(file):
-                snd = parselmouth.Sound(file)
-                pitch = snd.to_pitch()
-
-                fo = pitch.get_mean()
-                fhi = pitch.selected_array['frequency'].max()
-                flo = pitch.selected_array['frequency'].min()
-
-                pointProcess = parselmouth.praat.call(snd, "To PointProcess (periodic, cc)", 75, 500)
-                jitter_abs = parselmouth.praat.call([snd, pointProcess], "Get jitter (local, absolute)", 0, 0, 0.0001, 0.02, 1.3)
-                ddp = parselmouth.praat.call([snd, pointProcess], "Get jitter (ddp)", 0, 0, 0.0001, 0.02, 1.3)
-
-                harmonicity = snd.to_harmonicity_cc()
-                nhr = 1 / (10 ** (parselmouth.praat.call(harmonicity, "Get mean", 0, 0) / 10))
-
-                shimmer_apq5 = parselmouth.praat.call([snd, pointProcess], "Get shimmer (apq5)", 0, 0, 0.0001, 0.02, 1.3, 1.6)
-                ppe = parselmouth.praat.call([pitch], "Get jitter (ppq5)", 0, 0, 0.0001, 0.02, 1.3)
-
-                spread1 = fo - flo
-                spread2 = fhi - fo
-
-                return [ppe, spread1, fo, spread2, flo, fhi, ddp, nhr, jitter_abs, shimmer_apq5]
-
-            try:
-                features = extract_features_from_audio(wav_path)
-                input_array = np.array(features).reshape(1, -1)
-                input_scaled = scaler.transform(input_array)
-                prediction = parkinson_model.predict(input_scaled)
-
-                st.subheader("🧠 Prediction Result:")
-                if prediction[0] == 1:
-                    st.error("⚠️ Signs of Parkinson's detected from your voice.")
-                    st.info("We recommend visiting a neurologist for a formal diagnosis.")
-                else:
-                    st.success("✅ Your voice test shows no signs of Parkinson's.")
-
-                os.remove(wav_path)
-            except Exception as e:
-                st.error(f"Error processing voice: {e}")
 
 # --------------------- Self Assessment Page ---------------------
 if selected == 'Self Assessment':
