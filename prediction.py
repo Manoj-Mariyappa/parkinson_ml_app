@@ -8,8 +8,17 @@ Guide: K Sharath
 import pickle
 import streamlit as st
 from streamlit_option_menu import option_menu
+import parselmouth
+import tempfile
+import os
+from streamlit_audio_recorder import audio_recorder
 import numpy as np
 import cohere
+
+try:
+    cohere_api_key = st.secrets["cohere_api_key"]
+except KeyError:
+    st.error("❌ 'cohere_api_key' not found in Streamlit secrets. Please set it in the Cloud.")
 
 # Load the trained model
 try:
@@ -23,7 +32,8 @@ except:
 # Sidebar navigation
 with st.sidebar:
     selected = option_menu('PARKINSON DISEASE PREDICTION',
-                           ['Voice Data Test',
+                           ['Voice Clinical Data Test',
+                            'Photonation Test'
                             'Self Assessment',
                             'Chat Helper'],  # NEW OPTION
                            default_index=0)
@@ -77,6 +87,66 @@ if selected == 'Voice Data Test':
                 st.error("❌ Please enter valid numbers only")
         else:
             st.error("❌ Model not loaded properly")
+
+# --------------------- Phonation Test ---------------------
+if selected == "Phonation Test":
+    st.title("🎙️ Phonation Test for Parkinson's Detection")
+    st.write("Record your voice and check for signs of Parkinson’s disease.")
+
+    audio_bytes = audio_recorder(
+        text="Record your voice saying 'ahhh' for 5 seconds.",
+        recording_color="#e60000",
+        neutral_color="#6aa36f",
+        icon_size="2x",
+    )
+
+    def extract_features_from_audio(file):
+        snd = parselmouth.Sound(file)
+        pitch = snd.to_pitch()
+
+        fo = pitch.get_mean()
+        fhi = pitch.selected_array['frequency'].max()
+        flo = pitch.selected_array['frequency'].min()
+
+        pointProcess = parselmouth.praat.call(snd, "To PointProcess (periodic, cc)", 75, 500)
+        jitter_abs = parselmouth.praat.call([snd, pointProcess], "Get jitter (local, absolute)", 0, 0, 0.0001, 0.02, 1.3)
+        ddp = parselmouth.praat.call([snd, pointProcess], "Get jitter (ddp)", 0, 0, 0.0001, 0.02, 1.3)
+
+        harmonicity = snd.to_harmonicity_cc()
+        nhr = 1 / (10 ** (parselmouth.praat.call(harmonicity, "Get mean", 0, 0) / 10))
+
+        shimmer_apq5 = parselmouth.praat.call([snd, pointProcess], "Get shimmer (apq5)", 0, 0, 0.0001, 0.02, 1.3, 1.6)
+        ppe = parselmouth.praat.call([pitch], "Get jitter (ppq5)", 0, 0, 0.0001, 0.02, 1.3)
+
+        spread1 = fo - flo
+        spread2 = fhi - fo
+
+        return [ppe, spread1, fo, spread2, flo, fhi, ddp, nhr, jitter_abs, shimmer_apq5]
+
+    if audio_bytes:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+            tmp_file.write(audio_bytes)
+            tmp_file_path = tmp_file.name
+
+        try:
+            st.audio(audio_bytes, format='audio/wav')
+
+            features = extract_features_from_audio(tmp_file_path)
+            input_array = np.array(features).reshape(1, -1)
+            input_scaled = scaler.transform(input_array)
+            prediction = parkinson_model.predict(input_scaled)
+
+            st.subheader("🧠 Prediction Result:")
+            if prediction[0] == 1:
+                st.error("⚠️ Signs of Parkinson's detected from your voice.")
+                st.info("We recommend visiting a neurologist for a formal diagnosis.")
+            else:
+                st.success("✅ Your voice test shows no signs of Parkinson's.")
+
+            os.remove(tmp_file_path)
+
+        except Exception as e:
+            st.error(f"Error processing voice: {e}")
 
 # --------------------- Self Assessment Page ---------------------
 if selected == 'Self Assessment':
@@ -150,7 +220,7 @@ if selected == "Chat Helper":
 
     if user_input:
         try:
-            co = cohere.Client(st.secrets["cohere_api_key"])
+            co = cohere.Client(cohere_api_key)
 
             # Add preamble to keep it Parkinson-focused
             response = co.chat(
