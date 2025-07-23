@@ -11,12 +11,6 @@ from streamlit_option_menu import option_menu
 import numpy as np
 import cohere
 
-
-try:
-    cohere_api_key = st.secrets["cohere_api_key"]
-except KeyError:
-    st.error("❌ 'cohere_api_key' not found in Streamlit secrets. Please set it in the Cloud.")
-
 # Load the trained model
 try:
     parkinson_model = pickle.load(open('rftrained_model.sav', 'rb'))
@@ -29,7 +23,7 @@ except:
 # Sidebar navigation
 with st.sidebar:
     selected = option_menu('PARKINSON DISEASE PREDICTION',
-                           ['Voice Clinical Data Test',
+                           ['Voice Data Test',
                             'Self Assessment',
                             'Chat Helper'],  # NEW OPTION
                            default_index=0)
@@ -156,7 +150,7 @@ if selected == "Chat Helper":
 
     if user_input:
         try:
-            co = cohere.Client(cohere_api_key)
+            co = cohere.Client(st.secrets["cohere_api_key"])
 
             # Add preamble to keep it Parkinson-focused
             response = co.chat(
@@ -192,4 +186,4 @@ if selected == "Chat Helper":
     # Clear chat button
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
-        st.rerun()
+        st.rerun() dont change this code only update the changes 
