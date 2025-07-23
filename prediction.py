@@ -90,16 +90,37 @@ if selected == 'Voice Data Test':
 
 # --------------------- Phonation Test ---------------------
 if selected == "Phonation Test":
+    import streamlit as st
+    from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
+    import av
+    import numpy as np
+    import parselmouth
+    import os
+    import tempfile
+    import soundfile as sf
+
     st.title("🎙️ Phonation Test for Parkinson's Detection")
     st.write("Record your voice and check for signs of Parkinson’s disease.")
 
-    audio_bytes = audio_recorder(
-        text="Record your voice saying 'ahhh' for 5 seconds.",
-        recording_color="#e60000",
-        neutral_color="#6aa36f",
-        icon_size="2x",
+    # Audio Processor Class
+    class AudioProcessor(AudioProcessorBase):
+        def __init__(self):
+            self.audio_buffer = b""
+
+        def recv(self, frame: av.AudioFrame) -> av.AudioFrame:
+            pcm = frame.to_ndarray().tobytes()
+            self.audio_buffer += pcm
+            return frame
+
+    webrtc_ctx = webrtc_streamer(
+        key="phonation",
+        mode="sendonly",
+        in_audio=True,
+        media_stream_constraints={"audio": True, "video": False},
+        audio_processor_factory=AudioProcessor,
     )
 
+    # Feature Extraction
     def extract_features_from_audio(file):
         snd = parselmouth.Sound(file)
         pitch = snd.to_pitch()
@@ -123,30 +144,35 @@ if selected == "Phonation Test":
 
         return [ppe, spread1, fo, spread2, flo, fhi, ddp, nhr, jitter_abs, shimmer_apq5]
 
-    if audio_bytes:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-            tmp_file.write(audio_bytes)
-            tmp_file_path = tmp_file.name
+    # Process after stop
+    if webrtc_ctx.state.playing:
+        st.info("Recording... Speak 'ahhh' for 5 seconds then stop.")
+    elif webrtc_ctx.state == webrtc_ctx.State.STOPPED and webrtc_ctx.audio_processor:
+        with st.spinner("Processing your voice..."):
+            try:
+                audio_data = webrtc_ctx.audio_processor.audio_buffer
+                temp_wav = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+                sf.write(temp_wav.name, np.frombuffer(audio_data, dtype=np.int16), 48000)  # 48kHz default
 
-        try:
-            st.audio(audio_bytes, format='audio/wav')
+                st.audio(temp_wav.name, format='audio/wav')
 
-            features = extract_features_from_audio(tmp_file_path)
-            input_array = np.array(features).reshape(1, -1)
-            input_scaled = scaler.transform(input_array)
-            prediction = parkinson_model.predict(input_scaled)
+                features = extract_features_from_audio(temp_wav.name)
+                input_array = np.array(features).reshape(1, -1)
+                input_scaled = scaler.transform(input_array)
+                prediction = parkinson_model.predict(input_scaled)
 
-            st.subheader("🧠 Prediction Result:")
-            if prediction[0] == 1:
-                st.error("⚠️ Signs of Parkinson's detected from your voice.")
-                st.info("We recommend visiting a neurologist for a formal diagnosis.")
-            else:
-                st.success("✅ Your voice test shows no signs of Parkinson's.")
+                st.subheader("🧠 Prediction Result:")
+                if prediction[0] == 1:
+                    st.error("⚠️ Signs of Parkinson's detected from your voice.")
+                    st.info("We recommend visiting a neurologist for a formal diagnosis.")
+                else:
+                    st.success("✅ Your voice test shows no signs of Parkinson's.")
 
-            os.remove(tmp_file_path)
+                os.remove(temp_wav.name)
 
-        except Exception as e:
-            st.error(f"Error processing voice: {e}")
+            except Exception as e:
+                st.error(f"Error processing voice: {e}")
+
 
 # --------------------- Self Assessment Page ---------------------
 if selected == 'Self Assessment':
