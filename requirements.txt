@@ -1,5 +1,11 @@
 streamlit
-streamlit-option-menu
-numpy
 scikit-learn
-cohere
+numpy
+matplotlib
+pandas
+joblib
+parselmouth
+soundfile
+librosa
+streamlit-webrtc
+git+https://github.com/stefanrmmr/streamlit_audio_recorder.git
