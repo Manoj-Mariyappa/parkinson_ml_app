@@ -1,10 +1,9 @@
-av
-cohere
-matplotlib
-numpy
-pandas
-praat-parselmouth
-scikit-learn
 streamlit
+scikit-learn
+pandas
+numpy
+matplotlib
+praat-parselmouth
 streamlit-option-menu
+cohere
 streamlit-webrtc
