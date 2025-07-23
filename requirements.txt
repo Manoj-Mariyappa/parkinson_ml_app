@@ -1,10 +1,10 @@
-streamlit
-scikit-learn
-numpy
+av
+cohere
 matplotlib
+numpy
 pandas
-joblib
-parselmouth
-soundfile
-librosa
+praat-parselmouth
+scikit-learn
+streamlit
+streamlit-option-menu
 streamlit-webrtc
