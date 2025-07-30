@@ -20,16 +20,18 @@ except:
     parkinson_model = None
     scaler = None
 
-# Sidebar navigation
+#navigation
 with st.sidebar:
     selected = option_menu('PARKINSON DISEASE PREDICTION',
-                           ['Voice Data Test',
+                           ['Clinical Data Test',
                             'Self Assessment',
-                            'Chat Helper'],  # NEW OPTION
-                           default_index=0)
+                            'Chat Helper'],  
+                           default_index=0,
+                           orientation="horizontal",
+                          )
 
 # --------------------- Voice Test Page ---------------------
-if selected == 'Voice Data Test':
+if selected == 'Clinical Data Test':
     st.title("Parkinson's Voice Test")
     st.write("Enter your voice data values to check for Parkinson's signs")
 
