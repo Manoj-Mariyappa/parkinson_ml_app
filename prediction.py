@@ -21,14 +21,14 @@ except:
     scaler = None
 
 #navigation
-with st.sidebar:
-    selected = option_menu('PARKINSON DISEASE PREDICTION',
-                           ['Clinical Data Test',
-                            'Self Assessment',
-                            'Chat Helper'],  
-                           default_index=0,
-                           orientation="horizontal",
-                          )
+#with st.sidebar:
+selected = option_menu('PARKINSON DISEASE PREDICTION',
+                        ['Clinical Data Test',
+                        'Self Assessment',
+                        'Chat Helper'],  
+                       default_index=0,
+                       orientation="horizontal",
+                      )
 
 # --------------------- Voice Test Page ---------------------
 if selected == 'Clinical Data Test':
