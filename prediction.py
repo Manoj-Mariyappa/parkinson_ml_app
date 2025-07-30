@@ -26,7 +26,7 @@ selected = option_menu('PARKINSON DISEASE PREDICTION',
                         ['Clinical Data Test',
                         'Self Assessment',
                         'Chat Helper'],  
-                       #default_index=0,
+                       default_index=0,
                        orientation="horizontal",
                       )
 
