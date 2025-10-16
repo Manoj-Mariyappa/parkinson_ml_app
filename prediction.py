@@ -153,10 +153,10 @@ if selected == "Chat Helper":
             import cohere
             co = cohere.Client(st.secrets["cohere_api_key"])
 
-            # Use correct model and parameter for your SDK
+           
             response = co.chat(
-                model="command-r",           # fixed model
-                message=user_input,          # single message, not messages
+                model="command-light",           
+                message=user_input,          
                 temperature=0.4,
                 preamble="You are a helpful medical assistant. Only answer questions related to Parkinson’s disease. "
                          "If a question is not related, respond with: 'Sorry, I can only help with Parkinson’s-related queries.'"
@@ -185,6 +185,7 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
         st.rerun()
+
 
 
 
