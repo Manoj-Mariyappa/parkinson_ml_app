@@ -139,35 +139,44 @@ if selected == 'Self Assessment':
 
 
 # --------------------- Chat Helper Page ---------------------
-# --------------------- Chat Helper Page ---------------------
 if selected == "Chat Helper":
-    import requests
-
+    import cohere
     st.title("💬 Parkinson's Chat Helper")
     st.markdown("Ask Parkinson's-related medical questions.")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    BACKEND_URL = "https://parkinson-backend-1.onrender.com/ask"
-    HEADERS = {"X-APP-TOKEN": st.secrets["BACKEND_TOKEN"]}
-
+    # Get user message using chat_input (auto-submit on Enter)
     user_input = st.chat_input("Ask your question about Parkinson's...")
 
     if user_input:
         try:
-            res = requests.post(BACKEND_URL, json={"message": user_input}, headers=HEADERS, timeout=30)
-            if res.status_code == 200:
-                answer = res.json().get("answer", "No response from backend.")
-            else:
-                answer = f"⚠️ Error: {res.status_code} - {res.text}"
+            co = cohere.Client(st.secrets["cohere_api_key"])
 
+            # Add preamble to keep it Parkinson-focused
+            response = co.chat(
+                message=user_input,
+                model="command-r-plus",
+                temperature=0.4,
+                preamble="You are a helpful medical assistant. Only answer questions related to Parkinson’s disease. "
+                         "If a question is not related, respond with: 'Sorry, I can only help with Parkinson’s-related queries.'",
+                chat_history=[
+                    {"role": "USER", "message": msg["user"]}
+                    if msg["role"] == "user" else
+                    {"role": "CHATBOT", "message": msg["bot"]}
+                    for msg in st.session_state.chat_history
+                ],
+            )
+
+            # Store messages
             st.session_state.chat_history.append({"role": "user", "user": user_input})
-            st.session_state.chat_history.append({"role": "bot", "bot": answer})
+            st.session_state.chat_history.append({"role": "bot", "bot": response.text})
 
         except Exception as e:
-            st.error(f"⚠️ Backend error: {e}")
+            st.error("⚠️ Error: Check your API key or internet connection.")
 
+    # Display as chat bubbles
     for msg in st.session_state.chat_history:
         if msg["role"] == "user":
             with st.chat_message("user"):
@@ -176,9 +185,10 @@ if selected == "Chat Helper":
             with st.chat_message("assistant"):
                 st.markdown(msg["bot"])
 
+    # Clear chat button
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
-        st.rerun()
+        st.rerun() dont change this code only update the changes 
 
 
 
