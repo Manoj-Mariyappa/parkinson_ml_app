@@ -140,43 +140,38 @@ if selected == 'Self Assessment':
 
 # --------------------- Chat Helper Page ---------------------
 if selected == "Chat Helper":
-    import cohere
     st.title("💬 Parkinson's Chat Helper")
     st.markdown("Ask Parkinson's-related medical questions.")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # Get user message using chat_input (auto-submit on Enter)
     user_input = st.chat_input("Ask your question about Parkinson's...")
 
     if user_input:
         try:
+            import cohere
             co = cohere.Client(st.secrets["cohere_api_key"])
 
-            # Add preamble to keep it Parkinson-focused
+            # Use the correct model
             response = co.chat(
-                message=user_input,
                 model="command-r",
+                messages=[{"role": "user", "content": user_input}],
                 temperature=0.4,
-                preamble="You are a helpful medical assistant. Only answer questions related to Parkinson’s disease. "
-                         "If a question is not related, respond with: 'Sorry, I can only help with Parkinson’s-related queries.'",
-                chat_history=[
-                    {"role": "USER", "message": msg["user"]}
-                    if msg["role"] == "user" else
-                    {"role": "CHATBOT", "message": msg["bot"]}
-                    for msg in st.session_state.chat_history
-                ],
+                max_tokens=300
             )
+
+            # Get the reply from the latest message
+            bot_reply = response.message.content
 
             # Store messages
             st.session_state.chat_history.append({"role": "user", "user": user_input})
-            st.session_state.chat_history.append({"role": "bot", "bot": response.text})
+            st.session_state.chat_history.append({"role": "bot", "bot": bot_reply})
 
         except Exception as e:
-            st.error("⚠️ Error: Check your API key or internet connection.")
+            st.error(f"⚠️ Error: {str(e)}")
 
-    # Display as chat bubbles
+    # Display chat
     for msg in st.session_state.chat_history:
         if msg["role"] == "user":
             with st.chat_message("user"):
@@ -185,10 +180,11 @@ if selected == "Chat Helper":
             with st.chat_message("assistant"):
                 st.markdown(msg["bot"])
 
-    # Clear chat button
+    # Clear chat
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
         st.rerun()
+
 
 
 
