@@ -152,7 +152,7 @@ if selected == "Chat Helper":
 
     if user_input:
         try:
-            co = cohere.Client(st.secrets["cohere_api_key"])
+            co = cohere.Client(st.secrets["cohere_api"])
 
             # Add preamble to keep it Parkinson-focused
             response = co.chat(
@@ -189,3 +189,4 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
         st.rerun()
+
