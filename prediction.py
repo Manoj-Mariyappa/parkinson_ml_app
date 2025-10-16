@@ -188,7 +188,8 @@ if selected == "Chat Helper":
     # Clear chat button
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
-        st.rerun() dont change this code only update the changes 
+        st.rerun()
+
 
 
 
