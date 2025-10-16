@@ -153,16 +153,17 @@ if selected == "Chat Helper":
             import cohere
             co = cohere.Client(st.secrets["cohere_api_key"])
 
-            # Use the correct model
+            # Use correct model and parameter for your SDK
             response = co.chat(
-                model="command-r",
-                messages=[{"role": "user", "content": user_input}],
+                model="command-r",           # fixed model
+                message=user_input,          # single message, not messages
                 temperature=0.4,
-                max_tokens=300
+                preamble="You are a helpful medical assistant. Only answer questions related to Parkinson’s disease. "
+                         "If a question is not related, respond with: 'Sorry, I can only help with Parkinson’s-related queries.'"
             )
 
-            # Get the reply from the latest message
-            bot_reply = response.message.content
+            # Get the reply text
+            bot_reply = response.text
 
             # Store messages
             st.session_state.chat_history.append({"role": "user", "user": user_input})
