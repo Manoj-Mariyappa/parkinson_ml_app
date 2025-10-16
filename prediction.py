@@ -20,11 +20,6 @@ except:
     parkinson_model = None
     scaler = None
 
-if "cohere_api" in st.secrets:
-    st.success("✅ Cohere API key is loaded!")
-else:
-    st.error("❌ Cohere API key not found! Please add it in Streamlit Cloud → App Settings → Secrets.")
-
 #navigation
 with st.sidebar:
     selected = option_menu('PARKINSON DISEASE PREDICTION',
@@ -194,5 +189,6 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
         st.rerun()
+
 
 
