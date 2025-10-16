@@ -157,7 +157,7 @@ if selected == "Chat Helper":
             # Add preamble to keep it Parkinson-focused
             response = co.chat(
                 message=user_input,
-                model="command-r-plus",
+                model="command-r",
                 temperature=0.4,
                 preamble="You are a helpful medical assistant. Only answer questions related to Parkinson’s disease. "
                          "If a question is not related, respond with: 'Sorry, I can only help with Parkinson’s-related queries.'",
@@ -189,6 +189,7 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
         st.rerun() dont change this code only update the changes 
+
 
 
 
