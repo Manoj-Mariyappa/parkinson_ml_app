@@ -165,7 +165,7 @@ if selected == "Chat Helper":
             )
 
             # Store bot response
-            bot_message = response.text
+            bot_message = response.message.content[0].text
             st.session_state.chat_history.append({"role": "assistant", "content": bot_message})
 
         except Exception as e:
@@ -184,6 +184,7 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = [{"role": "system", "content": "You are a helpful medical assistant. Only answer questions related to Parkinson’s disease."}]
         st.rerun()
+
 
 
 
