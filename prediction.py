@@ -31,28 +31,23 @@ with st.sidebar:
                           )
 
 # --------------------- Voice Test Page ---------------------
-# --------------------- Voice Test Page ---------------------
 if selected == 'Clinical Data Test':
     st.title("Parkinson's Voice Test")
     st.write("Enter your voice data values to check for Parkinson's signs")
 
     # ---------- INITIALIZE SESSION STATE ----------
-    if "PPE" not in st.session_state:
-        st.session_state.PPE = ""
-        st.session_state.Fo = ""
-        st.session_state.Flo = ""
-        st.session_state.DDP = ""
-        st.session_state.Jitter_Abs = ""
-        st.session_state.spread1 = ""
-        st.session_state.spread2 = ""
-        st.session_state.Fhi = ""
-        st.session_state.NHR = ""
-        st.session_state.APQ5 = ""
+    field_keys = ["PPE","Fo","Flo","DDP","Jitter_Abs","spread1","spread2","Fhi","NHR","APQ5"]
 
-    # ---------- FULL CLEAR BUTTON (MUST BE HERE BEFORE INPUTS) ----------
-    if st.button("🧹 Clear"):
-        for key in ["PPE","Fo","Flo","DDP","Jitter_Abs","spread1","spread2","Fhi","NHR","APQ5"]:
+    if "initialized" not in st.session_state:
+        for key in field_keys:
             st.session_state[key] = ""
+        st.session_state.initialized = True
+
+    # ---------- PROCESS CLEAR REQUEST (Before rendering inputs) ----------
+    if st.session_state.get("clear_trigger", False):
+        for key in field_keys:
+            st.session_state[key] = ""
+        st.session_state.clear_trigger = False
         st.rerun()
 
     # ---------- INPUT FIELDS ----------
@@ -76,7 +71,7 @@ if selected == 'Clinical Data Test':
     if st.button("\U0001F50D Check Result"):
         if parkinson_model and scaler:
             try:
-                # ---------------- RANGE VALIDATION ----------------
+                # RANGE VALIDATION
                 try:
                     ppe_v = float(PPE)
                     fo_v = float(Fo)
@@ -95,32 +90,22 @@ if selected == 'Clinical Data Test':
                 valid = True
                 err = ""
 
-                if not (0 <= ppe_v <= 0.8):
-                    valid = False; err = "❌ PPE must be between 0 and 0.8"
-                elif not (60 <= fo_v <= 260):
-                    valid = False; err = "❌ MDVP:Fo(Hz) must be between 60 and 260 Hz"
-                elif not (60 <= flo_v <= 200):
-                    valid = False; err = "❌ MDVP:Flo(Hz) must be between 60 and 200 Hz"
-                elif not (0 <= ddp_v <= 0.03):
-                    valid = False; err = "❌ Jitter:DDP must be between 0 and 0.03"
-                elif not (0 <= jitter_abs_v <= 0.001):
-                    valid = False; err = "❌ MDVP:Jitter(Abs) must be between 0 and 0.001"
-                elif not (-7 <= spread1_v <= -1):
-                    valid = False; err = "❌ Spread1 must be between -7 and -1"
-                elif not (0 <= spread2_v <= 0.5):
-                    valid = False; err = "❌ Spread2 must be between 0 and 0.5"
-                elif not (100 <= fhi_v <= 600):
-                    valid = False; err = "❌ MDVP:Fhi(Hz) must be between 100 and 600 Hz"
-                elif not (0 <= nhr_v <= 0.6):
-                    valid = False; err = "❌ NHR must be between 0 and 0.6"
-                elif not (0 <= apq5_v <= 0.05):
-                    valid = False; err = "❌ Shimmer:APQ5 must be between 0 and 0.05"
+                if not (0 <= ppe_v <= 0.8): valid=False; err="❌ PPE must be 0–0.8"
+                elif not (60 <= fo_v <= 260): valid=False; err="❌ Fo must be 60–260"
+                elif not (60 <= flo_v <= 200): valid=False; err="❌ Flo must be 60–200"
+                elif not (0 <= ddp_v <= 0.03): valid=False; err="❌ DDP must be 0–0.03"
+                elif not (0 <= jitter_abs_v <= 0.001): valid=False; err="❌ Jitter Abs must be 0–0.001"
+                elif not (-7 <= spread1_v <= -1): valid=False; err="❌ Spread1 must be -7 to -1"
+                elif not (0 <= spread2_v <= 0.5): valid=False; err="❌ Spread2 must be 0–0.5"
+                elif not (100 <= fhi_v <= 600): valid=False; err="❌ Fhi must be 100–600"
+                elif not (0 <= nhr_v <= 0.6): valid=False; err="❌ NHR must be 0–0.6"
+                elif not (0 <= apq5_v <= 0.05): valid=False; err="❌ APQ5 must be 0–0.05"
 
                 if not valid:
                     st.error(err)
                     st.stop()
-                # ---------------------------------------------------
 
+                # PREDICTION
                 user_input = [ppe_v, spread1_v, fo_v, spread2_v,
                               flo_v, fhi_v, ddp_v, nhr_v,
                               jitter_abs_v, apq5_v]
@@ -130,14 +115,20 @@ if selected == 'Clinical Data Test':
                 prediction = parkinson_model.predict(input_scaled)
 
                 if prediction[0] == 1:
-                    st.error("\u26A0\ufe0f **Test shows signs of Parkinson's**")
+                    st.error("⚠️ **Test shows signs of Parkinson's**")
                 else:
-                    st.success("\u2705 **Test shows no signs of Parkinson's**")
+                    st.success("✅ **Test shows no signs of Parkinson's**")
 
             except:
-                st.error("❌ Please enter valid numbers only")
+                st.error("❌ Something went wrong. Please try again.")
         else:
             st.error("❌ Model not loaded properly")
+
+    # ---------- CLEAR BUTTON (VISIBLE BELOW CHECK) ----------
+    if st.button("🧹 Clear"):
+        st.session_state.clear_trigger = True
+        st.rerun()
+
 
 # --------------------- Self Assessment Page ---------------------
 if selected == 'Self Assessment':
@@ -243,6 +234,7 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = [{"role": "system", "content": "You are a helpful medical assistant. Only answer questions related to Parkinson’s disease."}]
         st.rerun()
+
 
 
 
