@@ -79,7 +79,6 @@ if selected == 'Clinical Data Test':
                 st.error("❌ Please enter valid numbers only")
         else:
             st.error("❌ Model not loaded properly")
-    clear_btn = st.form_submit_button("🧹 Clear")
 
     if st.button("🧹 Clear"):
         st.rerun()
@@ -188,6 +187,7 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = [{"role": "system", "content": "You are a helpful medical assistant. Only answer questions related to Parkinson’s disease."}]
         st.rerun()
+
 
 
 
