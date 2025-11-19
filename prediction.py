@@ -35,26 +35,38 @@ if selected == 'Clinical Data Test':
     st.title("Parkinson's Voice Test")
     st.write("Enter your voice data values to check for Parkinson's signs")
 
+    # ---------- INITIALIZE SESSION STATE ----------
+    if "PPE" not in st.session_state:
+        st.session_state.PPE = ""
+        st.session_state.Fo = ""
+        st.session_state.Flo = ""
+        st.session_state.DDP = ""
+        st.session_state.Jitter_Abs = ""
+        st.session_state.spread1 = ""
+        st.session_state.spread2 = ""
+        st.session_state.Fhi = ""
+        st.session_state.NHR = ""
+        st.session_state.APQ5 = ""
+
     col1, col2 = st.columns(2)
 
     with col1:
-        PPE = st.text_input('PPE Value')
-        Fo = st.text_input('MDVP:Fo(Hz)')
-        Flo = st.text_input('MDVP:Flo(Hz)')
-        DDP = st.text_input('Jitter:DDP')
-        Jitter_Abs = st.text_input('MDVP:Jitter(Abs)')
+        PPE = st.text_input('PPE Value', st.session_state.PPE, key="PPE")
+        Fo = st.text_input('MDVP:Fo(Hz)', st.session_state.Fo, key="Fo")
+        Flo = st.text_input('MDVP:Flo(Hz)', st.session_state.Flo, key="Flo")
+        DDP = st.text_input('Jitter:DDP', st.session_state.DDP, key="DDP")
+        Jitter_Abs = st.text_input('MDVP:Jitter(Abs)', st.session_state.Jitter_Abs, key="Jitter_Abs")
 
     with col2:
-        spread1 = st.text_input('Spread1')
-        spread2 = st.text_input('Spread2')
-        Fhi = st.text_input('MDVP:Fhi(Hz)')
-        NHR = st.text_input('NHR')
-        APQ5 = st.text_input('Shimmer:APQ5')
+        spread1 = st.text_input('Spread1', st.session_state.spread1, key="spread1")
+        spread2 = st.text_input('Spread2', st.session_state.spread2, key="spread2")
+        Fhi = st.text_input('MDVP:Fhi(Hz)', st.session_state.Fhi, key="Fhi")
+        NHR = st.text_input('NHR', st.session_state.NHR, key="NHR")
+        APQ5 = st.text_input('Shimmer:APQ5', st.session_state.APQ5, key="APQ5")
             
     if st.button("\U0001F50D Check Result"):
         if parkinson_model and scaler:
             try:
-
                 # ---------------- RANGE VALIDATION ----------------
                 try:
                     ppe_v = float(PPE)
@@ -76,38 +88,28 @@ if selected == 'Clinical Data Test':
 
                 if not (0 <= ppe_v <= 0.8):
                     valid = False; err = "❌ PPE must be between 0 and 0.8"
-
                 elif not (60 <= fo_v <= 260):
                     valid = False; err = "❌ MDVP:Fo(Hz) must be between 60 and 260 Hz"
-
                 elif not (60 <= flo_v <= 200):
                     valid = False; err = "❌ MDVP:Flo(Hz) must be between 60 and 200 Hz"
-
                 elif not (0 <= ddp_v <= 0.03):
                     valid = False; err = "❌ Jitter:DDP must be between 0 and 0.03"
-
                 elif not (0 <= jitter_abs_v <= 0.001):
                     valid = False; err = "❌ MDVP:Jitter(Abs) must be between 0 and 0.001"
-
                 elif not (-7 <= spread1_v <= -1):
                     valid = False; err = "❌ Spread1 must be between -7 and -1"
-
                 elif not (0 <= spread2_v <= 0.5):
                     valid = False; err = "❌ Spread2 must be between 0 and 0.5"
-
                 elif not (100 <= fhi_v <= 600):
                     valid = False; err = "❌ MDVP:Fhi(Hz) must be between 100 and 600 Hz"
-
                 elif not (0 <= nhr_v <= 0.6):
                     valid = False; err = "❌ NHR must be between 0 and 0.6"
-
                 elif not (0 <= apq5_v <= 0.05):
                     valid = False; err = "❌ Shimmer:APQ5 must be between 0 and 0.05"
 
                 if not valid:
                     st.error(err)
                     st.stop()
-
                 # ---------------------------------------------------
 
                 user_input = [ppe_v, spread1_v, fo_v, spread2_v,
@@ -120,23 +122,18 @@ if selected == 'Clinical Data Test':
 
                 if prediction[0] == 1:
                     st.error("\u26A0\ufe0f **Test shows signs of Parkinson's**")
-                    st.write("**Next steps:**")
-                    st.write("• Visit a neurologist immediately")
-                    st.write("• Don't panic - early detection helps")
-                    st.write("• Start regular exercise")
                 else:
                     st.success("\u2705 **Test shows no signs of Parkinson's**")
-                    st.write("**Keep healthy:**")
-                    st.write("• Continue regular exercise")
-                    st.write("• Maintain healthy diet")
-                    st.write("• Stay socially active")
 
             except:
                 st.error("❌ Please enter valid numbers only")
         else:
             st.error("❌ Model not loaded properly")
 
+    # ---------- FULL CLEAR BUTTON ----------
     if st.button("🧹 Clear"):
+        for key in ["PPE","Fo","Flo","DDP","Jitter_Abs","spread1","spread2","Fhi","NHR","APQ5"]:
+            st.session_state[key] = ""
         st.rerun()
 
 
@@ -244,6 +241,7 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = [{"role": "system", "content": "You are a helpful medical assistant. Only answer questions related to Parkinson’s disease."}]
         st.rerun()
+
 
 
 
