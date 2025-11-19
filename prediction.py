@@ -31,6 +31,7 @@ with st.sidebar:
                           )
 
 # --------------------- Voice Test Page ---------------------
+# --------------------- Voice Test Page ---------------------
 if selected == 'Clinical Data Test':
     st.title("Parkinson's Voice Test")
     st.write("Enter your voice data values to check for Parkinson's signs")
@@ -48,22 +49,30 @@ if selected == 'Clinical Data Test':
         st.session_state.NHR = ""
         st.session_state.APQ5 = ""
 
+    # ---------- FULL CLEAR BUTTON (MUST BE HERE BEFORE INPUTS) ----------
+    if st.button("🧹 Clear"):
+        for key in ["PPE","Fo","Flo","DDP","Jitter_Abs","spread1","spread2","Fhi","NHR","APQ5"]:
+            st.session_state[key] = ""
+        st.rerun()
+
+    # ---------- INPUT FIELDS ----------
     col1, col2 = st.columns(2)
 
     with col1:
-        PPE = st.text_input('PPE Value', key="PPE")
-        Fo = st.text_input('MDVP:Fo(Hz)', key="Fo")
-        Flo = st.text_input('MDVP:Flo(Hz)', key="Flo")
-        DDP = st.text_input('Jitter:DDP', key="DDP")
-        Jitter_Abs = st.text_input('MDVP:Jitter(Abs)', key="Jitter_Abs")
+        PPE = st.text_input('PPE Value', st.session_state.PPE, key="PPE")
+        Fo = st.text_input('MDVP:Fo(Hz)', st.session_state.Fo, key="Fo")
+        Flo = st.text_input('MDVP:Flo(Hz)', st.session_state.Flo, key="Flo")
+        DDP = st.text_input('Jitter:DDP', st.session_state.DDP, key="DDP")
+        Jitter_Abs = st.text_input('MDVP:Jitter(Abs)', st.session_state.Jitter_Abs, key="Jitter_Abs")
 
     with col2:
-        spread1 = st.text_input('Spread1', key="spread1")
-        spread2 = st.text_input('Spread2', key="spread2")
-        Fhi = st.text_input('MDVP:Fhi(Hz)', key="Fhi")
-        NHR = st.text_input('NHR', key="NHR")
-        APQ5 = st.text_input('Shimmer:APQ5', key="APQ5")
-            
+        spread1 = st.text_input('Spread1', st.session_state.spread1, key="spread1")
+        spread2 = st.text_input('Spread2', st.session_state.spread2, key="spread2")
+        Fhi = st.text_input('MDVP:Fhi(Hz)', st.session_state.Fhi, key="Fhi")
+        NHR = st.text_input('NHR', st.session_state.NHR, key="NHR")
+        APQ5 = st.text_input('Shimmer:APQ5', st.session_state.APQ5, key="APQ5")
+
+    # ---------- CHECK RESULT ----------
     if st.button("\U0001F50D Check Result"):
         if parkinson_model and scaler:
             try:
@@ -129,13 +138,6 @@ if selected == 'Clinical Data Test':
                 st.error("❌ Please enter valid numbers only")
         else:
             st.error("❌ Model not loaded properly")
-
-    # ---------- FULL CLEAR BUTTON ----------
-    if st.button("🧹 Clear"):
-        for key in ["PPE","Fo","Flo","DDP","Jitter_Abs","spread1","spread2","Fhi","NHR","APQ5"]:
-            st.session_state[key] = ""
-        st.rerun()
-
 
 # --------------------- Self Assessment Page ---------------------
 if selected == 'Self Assessment':
@@ -241,6 +243,7 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = [{"role": "system", "content": "You are a helpful medical assistant. Only answer questions related to Parkinson’s disease."}]
         st.rerun()
+
 
 
 
