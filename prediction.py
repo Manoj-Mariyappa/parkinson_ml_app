@@ -50,12 +50,7 @@ if selected == 'Clinical Data Test':
         Fhi = st.text_input('MDVP:Fhi(Hz)')
         NHR = st.text_input('NHR')
         APQ5 = st.text_input('Shimmer:APQ5')
-        
-    clear_btn = st.form_submit_button("🧹 Clear")
-
-    if clear_btn:
-        st.experimental_rerun()
-    
+            
     if st.button("\U0001F50D Check Result"):
         if parkinson_model and scaler:
             try:
@@ -84,6 +79,10 @@ if selected == 'Clinical Data Test':
                 st.error("❌ Please enter valid numbers only")
         else:
             st.error("❌ Model not loaded properly")
+    clear_btn = st.form_submit_button("🧹 Clear")
+
+    if clear_btn:
+        st.experimental_rerun()
 
 # --------------------- Self Assessment Page ---------------------
 if selected == 'Self Assessment':
@@ -189,6 +188,7 @@ if selected == "Chat Helper":
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = [{"role": "system", "content": "You are a helpful medical assistant. Only answer questions related to Parkinson’s disease."}]
         st.rerun()
+
 
 
 
